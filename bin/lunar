@@ -33,23 +33,12 @@ if (!$autoloaderFound) {
 }
 
 use Lunar\Cli\Application;
-use Lunar\Cli\Helper\ConsoleHelper;
 
 // Creation de l'application
 $app = new Application('Lunar CLI', '1.0.0');
 
-// Affichage d'un message si aucune commande n'est enregistree
-if (empty($app->getCommands())) {
-    ConsoleHelper::info("Lunar CLI est pret a etre utilise.");
-    ConsoleHelper::newLine();
-    ConsoleHelper::info("Pour enregistrer des commandes, creez une application personnalisee :");
-    ConsoleHelper::newLine();
-    echo ConsoleHelper::color("  \$app = new Application('Mon App', '1.0.0');\n", '36');
-    echo ConsoleHelper::color("  \$app->registerCommandsFromDirectory(__DIR__ . '/Command', 'App\\\\Command');\n", '36');
-    echo ConsoleHelper::color("  \$app->run();\n", '36');
-    ConsoleHelper::newLine();
-    exit(0);
-}
+// Enregistrement des commandes internes
+$app->registerCommandsFromDirectory(__DIR__ . '/../src/Command', 'Lunar\\Cli\\Command');
 
 // Execution
 exit($app->run());

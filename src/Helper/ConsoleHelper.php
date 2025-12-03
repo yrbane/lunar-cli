@@ -262,4 +262,65 @@ class ConsoleHelper
     {
         echo self::color(str_repeat($char, $width) . "\n", '90');
     }
+
+    /**
+     * Retourne une icone selon le type de fichier.
+     *
+     * @param string $path chemin du fichier ou dossier
+     *
+     * @return string icone unicode
+     */
+    public static function fileIcon(string $path): string
+    {
+        if (is_dir($path)) {
+            return '📁';
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'php' => '🐘',
+            'js', 'ts' => '📜',
+            'json' => '📋',
+            'md', 'txt' => '📝',
+            'yml', 'yaml' => '⚙️',
+            'css', 'scss', 'sass' => '🎨',
+            'html', 'htm' => '🌐',
+            'jpg', 'jpeg', 'png', 'gif', 'svg', 'webp' => '🖼️',
+            'pdf' => '📕',
+            'zip', 'tar', 'gz', 'rar' => '📦',
+            'sh', 'bash' => '🔧',
+            'sql' => '🗃️',
+            'lock' => '🔒',
+            default => '📄',
+        };
+    }
+
+    /**
+     * Retourne un code couleur ANSI selon le type de fichier.
+     *
+     * @param string $path chemin du fichier ou dossier
+     *
+     * @return string code couleur ANSI
+     */
+    public static function fileColor(string $path): string
+    {
+        if (is_dir($path)) {
+            return '1;34'; // Bleu gras
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'php' => '35',    // Magenta
+            'js', 'ts' => '33', // Jaune
+            'json' => '36',   // Cyan
+            'md', 'txt' => '37', // Blanc
+            'yml', 'yaml' => '32', // Vert
+            'css', 'scss', 'sass' => '95', // Magenta clair
+            'html', 'htm' => '91', // Rouge clair
+            'lock' => '90',   // Gris
+            default => '0',   // Defaut
+        };
+    }
 }
