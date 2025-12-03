@@ -208,16 +208,16 @@ class ConsoleHelper
     }
 
     /**
-     * Affiche un titre stylise encadre en ASCII et colore.
+     * Affiche un titre stylise encadre en Unicode et colore.
      *
      * @param string $text le texte du titre
      */
     public static function title(string $text): void
     {
-        $border = str_repeat('=', strlen($text) + 8);
-        echo "\n" . self::color('+' . $border . '+', '35') . "\n";
-        echo self::color('|    ' . $text . '    |', '1;35') . "\n";
-        echo self::color('+' . $border . '+', '35') . "\n\n";
+        $border = str_repeat('═', mb_strlen($text) + 8);
+        echo "\n" . self::color('╔' . $border . '╗', '35') . "\n";
+        echo self::color('║    ' . $text . '    ║', '1;35') . "\n";
+        echo self::color('╚' . $border . '╝', '35') . "\n\n";
     }
 
     /**
@@ -225,7 +225,7 @@ class ConsoleHelper
      */
     public static function subtitle(string $text): void
     {
-        echo self::color("> {$text}\n", '1;34');
+        echo self::color("➤ {$text}\n", '1;34');
     }
 
     /**
