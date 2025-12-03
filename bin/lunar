@@ -3,7 +3,7 @@
 /**
  * Lunar CLI - Point d'entree autonome.
  *
- * Detecte automatiquement si un projet utilise config/console.json
+ * Detecte automatiquement si un projet utilise config/cli.json
  * pour charger sa configuration, sinon utilise les commandes internes.
  *
  * @since 1.0.0
@@ -37,8 +37,8 @@ if (!$autoloaderFound) {
     exit(1);
 }
 
-// Si config/console.json existe, utiliser Console::run()
-$configPath = $projectRoot . '/config/console.json';
+// Si config/cli.json existe, utiliser Console::run()
+$configPath = $projectRoot . '/config/cli.json';
 
 if (file_exists($configPath)) {
     exit(\Lunar\Cli\Console::run($projectRoot));
