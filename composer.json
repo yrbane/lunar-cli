@@ -27,6 +27,9 @@
             "Lunar\\Cli\\Tests\\": "tests/"
         }
     },
+    "bin": [
+        "bin/lunar"
+    ],
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true

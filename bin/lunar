@@ -1,0 +1,55 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Lunar CLI - Point d'entree autonome.
+ *
+ * Ce script peut etre utilise directement ou comme base
+ * pour une application CLI personnalisee.
+ *
+ * @since 1.0.0
+ * @author seb@nethttp.net
+ */
+declare(strict_types=1);
+
+// Recherche de l'autoloader
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',           // Developpement local
+    __DIR__ . '/../../../autoload.php',            // Installation via Composer
+];
+
+$autoloaderFound = false;
+foreach ($autoloadPaths as $autoloadPath) {
+    if (file_exists($autoloadPath)) {
+        require $autoloadPath;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Erreur: Impossible de trouver l'autoloader Composer.\n");
+    fwrite(STDERR, "Executez 'composer install' pour installer les dependances.\n");
+    exit(1);
+}
+
+use Lunar\Cli\Application;
+use Lunar\Cli\Helper\ConsoleHelper;
+
+// Creation de l'application
+$app = new Application('Lunar CLI', '1.0.0');
+
+// Affichage d'un message si aucune commande n'est enregistree
+if (empty($app->getCommands())) {
+    ConsoleHelper::info("Lunar CLI est pret a etre utilise.");
+    ConsoleHelper::newLine();
+    ConsoleHelper::info("Pour enregistrer des commandes, creez une application personnalisee :");
+    ConsoleHelper::newLine();
+    echo ConsoleHelper::color("  \$app = new Application('Mon App', '1.0.0');\n", '36');
+    echo ConsoleHelper::color("  \$app->registerCommandsFromDirectory(__DIR__ . '/Command', 'App\\\\Command');\n", '36');
+    echo ConsoleHelper::color("  \$app->run();\n", '36');
+    ConsoleHelper::newLine();
+    exit(0);
+}
+
+// Execution
+exit($app->run());

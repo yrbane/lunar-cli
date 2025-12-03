@@ -8,7 +8,41 @@ Framework CLI PHP autonome avec commandes, helpers console et rendu de tableaux.
 composer require lunar/cli
 ```
 
+## Script console integre
+
+Le package inclut un script `bin/lunar` disponible apres installation :
+
+```bash
+# Via vendor/bin
+./vendor/bin/lunar
+
+# Ou directement
+php vendor/lunar/cli/bin/lunar
+```
+
 ## Utilisation rapide
+
+### Creer votre propre console
+
+Creez un fichier `bin/console` dans votre projet :
+
+```php
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Lunar\Cli\Application;
+
+$app = new Application('Mon Application', '1.0.0');
+
+// Enregistrer des commandes depuis un repertoire
+$app->registerCommandsFromDirectory(__DIR__ . '/../src/Command', 'App\\Command');
+
+exit($app->run());
+```
+
+Rendez-le executable : `chmod +x bin/console`
 
 ### Creer une commande
 
@@ -51,27 +85,6 @@ class HelloWorldCommand extends AbstractCommand
         HELP;
     }
 }
-```
-
-### Creer l'application
-
-```php
-#!/usr/bin/env php
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use Lunar\Cli\Application;
-
-$app = new Application('Mon Application', '1.0.0');
-
-// Enregistrer des commandes depuis un repertoire
-$app->registerCommandsFromDirectory(__DIR__ . '/src/Command', 'App\\Command');
-
-// Ou enregistrer une commande manuellement
-$app->addCommand('test:run', new TestCommand(), 'Execute les tests');
-
-exit($app->run());
 ```
 
 ## Fonctionnalites
