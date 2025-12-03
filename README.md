@@ -5,7 +5,7 @@ Framework CLI PHP autonome avec commandes, helpers console et rendu de tableaux.
 ## Installation
 
 ```bash
-composer require lunar/cli
+composer require yrbane/lunar-cli
 ```
 
 ## Script console integre
@@ -17,7 +17,7 @@ Le package inclut un script `bin/lunar` disponible apres installation :
 ./vendor/bin/lunar
 
 # Ou directement
-php vendor/lunar/cli/bin/lunar
+php vendor/yrbane/lunar-cli/bin/lunar
 ```
 
 ## Utilisation rapide

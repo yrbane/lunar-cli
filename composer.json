@@ -1,5 +1,5 @@
 {
-    "name": "lunar/cli",
+    "name": "yrbane/lunar-cli",
     "description": "Framework CLI PHP autonome avec commandes, helpers console et rendu de tableaux",
     "type": "library",
     "license": "MIT",
