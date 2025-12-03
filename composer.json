@@ -9,9 +9,16 @@
             "email": "seb@nethttp.net"
         }
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../lunar-config"
+        }
+    ],
     "require": {
         "php": ">=8.3",
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "yrbane/lunar-config": "@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0",

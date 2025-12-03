@@ -9,18 +9,17 @@ declare(strict_types=1);
 
 namespace Lunar\Cli;
 
+use Lunar\Config\Config;
+
 /**
  * Class Console.
  *
- * Charge la configuration depuis config/console.json et lance l'application.
+ * Charge la configuration depuis config/cli.json et lance l'application.
  * Les commandes sont cumulatives : lunar-cli + packages + projet.
  */
 class Console
 {
-    /**
-     * Chemin par defaut du fichier de configuration.
-     */
-    private const CONFIG_PATH = 'config/cli.json';
+    private const CONFIG_FILE = 'cli';
 
     /**
      * Lance la console en lisant la configuration.
@@ -33,7 +32,7 @@ class Console
     {
         // Auto-detection de la racine du projet
         if (null === $projectRoot) {
-            $projectRoot = self::detectProjectRoot();
+            $projectRoot = Config::getProjectRoot();
         }
 
         // Definition de la constante PROJECT_ROOT si pas deja definie
@@ -41,28 +40,23 @@ class Console
             define('PROJECT_ROOT', $projectRoot);
         }
 
-        // Chargement de la configuration du projet
-        $configPath = $projectRoot . '/' . self::CONFIG_PATH;
-        $config = file_exists($configPath) ? self::loadConfig($configPath) : [];
-
         // Execution du bootstrap si defini
-        if (isset($config['bootstrap'])) {
-            self::executeBootstrap($config['bootstrap']);
+        $bootstrap = Config::get(self::CONFIG_FILE, 'bootstrap');
+        if ($bootstrap) {
+            self::executeBootstrap($bootstrap);
         }
 
         // Creation de l'application
         $app = new Application(
-            $config['name'] ?? 'Lunar CLI',
-            $config['version'] ?? '1.0.0'
+            Config::get(self::CONFIG_FILE, 'name', 'Lunar CLI'),
+            Config::get(self::CONFIG_FILE, 'version', '1.0.0')
         );
 
         // Configuration de la factory si definie
-        if (isset($config['factory'])) {
-            $factoryClass = $config['factory'];
-            if (class_exists($factoryClass)) {
-                $factory = new $factoryClass();
-                $app->setCommandFactory(fn(string $class) => $factory->make($class));
-            }
+        $factoryClass = Config::get(self::CONFIG_FILE, 'factory');
+        if ($factoryClass && class_exists($factoryClass)) {
+            $factory = new $factoryClass();
+            $app->setCommandFactory(fn(string $class) => $factory->make($class));
         }
 
         // 1. Enregistrement des commandes internes de lunar-cli
@@ -75,9 +69,10 @@ class Console
         self::registerPackageCommands($app, $projectRoot);
 
         // 3. Enregistrement des commandes du projet
-        if (isset($config['commands']) && is_array($config['commands'])) {
-            foreach ($config['commands'] as $namespace => $directory) {
-                $fullPath = $projectRoot . '/' . ltrim($directory, '/');
+        $commands = Config::get(self::CONFIG_FILE, 'commands', []);
+        if (is_array($commands)) {
+            foreach ($commands as $namespace => $directory) {
+                $fullPath = Config::resolvePath($directory);
                 if (is_dir($fullPath)) {
                     $app->registerCommandsFromDirectory($fullPath, $namespace);
                 }
@@ -148,53 +143,13 @@ class Console
     }
 
     /**
-     * Detecte la racine du projet en cherchant composer.json.
-     */
-    private static function detectProjectRoot(): string
-    {
-        // Cherche depuis le repertoire courant
-        $dir = getcwd();
-
-        while ($dir !== '/') {
-            if (file_exists($dir . '/composer.json')) {
-                return $dir;
-            }
-            $dir = dirname($dir);
-        }
-
-        // Fallback: repertoire courant
-        return getcwd() ?: '.';
-    }
-
-    /**
-     * Charge et parse le fichier de configuration JSON.
-     *
-     * @return array<string, mixed>
-     */
-    private static function loadConfig(string $path): array
-    {
-        $content = file_get_contents($path);
-
-        if (false === $content) {
-            return [];
-        }
-
-        $config = json_decode($content, true);
-
-        if (!is_array($config)) {
-            return [];
-        }
-
-        return $config;
-    }
-
-    /**
      * Execute la classe de bootstrap.
      */
     private static function executeBootstrap(string $bootstrapClass): void
     {
         if (!class_exists($bootstrapClass)) {
             fwrite(STDERR, "Warning: Classe de bootstrap introuvable: {$bootstrapClass}\n");
+
             return;
         }
 
