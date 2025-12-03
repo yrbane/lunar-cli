@@ -13,6 +13,7 @@ namespace Lunar\Cli;
  * Class Console.
  *
  * Charge la configuration depuis config/console.json et lance l'application.
+ * Les commandes sont cumulatives : lunar-cli + packages + projet.
  */
 class Console
 {
@@ -40,20 +41,9 @@ class Console
             define('PROJECT_ROOT', $projectRoot);
         }
 
-        // Chargement de la configuration
+        // Chargement de la configuration du projet
         $configPath = $projectRoot . '/' . self::CONFIG_PATH;
-
-        if (!file_exists($configPath)) {
-            fwrite(STDERR, "Erreur: Fichier de configuration introuvable: {$configPath}\n");
-            return 1;
-        }
-
-        $config = self::loadConfig($configPath);
-
-        if (null === $config) {
-            fwrite(STDERR, "Erreur: Impossible de parser le fichier de configuration JSON.\n");
-            return 1;
-        }
+        $config = file_exists($configPath) ? self::loadConfig($configPath) : [];
 
         // Execution du bootstrap si defini
         if (isset($config['bootstrap'])) {
@@ -62,7 +52,7 @@ class Console
 
         // Creation de l'application
         $app = new Application(
-            $config['name'] ?? 'Console',
+            $config['name'] ?? 'Lunar CLI',
             $config['version'] ?? '1.0.0'
         );
 
@@ -75,7 +65,16 @@ class Console
             }
         }
 
-        // Enregistrement des commandes
+        // 1. Enregistrement des commandes internes de lunar-cli
+        $lunarCliCommands = dirname(__DIR__) . '/src/Command';
+        if (is_dir($lunarCliCommands)) {
+            $app->registerCommandsFromDirectory($lunarCliCommands, 'Lunar\\Cli\\Command');
+        }
+
+        // 2. Enregistrement des commandes des packages Lunar (vendor/lunar/*)
+        self::registerPackageCommands($app, $projectRoot);
+
+        // 3. Enregistrement des commandes du projet
         if (isset($config['commands']) && is_array($config['commands'])) {
             foreach ($config['commands'] as $namespace => $directory) {
                 $fullPath = $projectRoot . '/' . ltrim($directory, '/');
@@ -87,6 +86,65 @@ class Console
 
         // Execution
         return $app->run();
+    }
+
+    /**
+     * Enregistre les commandes des packages Lunar installes.
+     */
+    private static function registerPackageCommands(Application $app, string $projectRoot): void
+    {
+        $vendorDirs = [
+            $projectRoot . '/vendor/lunar',
+            $projectRoot . '/vendor/yrbane',
+        ];
+
+        foreach ($vendorDirs as $vendorDir) {
+            if (!is_dir($vendorDir)) {
+                continue;
+            }
+
+            foreach (scandir($vendorDir) as $package) {
+                if ($package === '.' || $package === '..' || $package === 'lunar-cli') {
+                    continue;
+                }
+
+                $packagePath = $vendorDir . '/' . $package;
+                $commandsPath = $packagePath . '/src/Command';
+
+                if (is_dir($commandsPath)) {
+                    // Determine le namespace depuis composer.json du package
+                    $namespace = self::getPackageNamespace($packagePath);
+                    if ($namespace) {
+                        $app->registerCommandsFromDirectory($commandsPath, $namespace . '\\Command');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Recupere le namespace PSR-4 d'un package depuis son composer.json.
+     */
+    private static function getPackageNamespace(string $packagePath): ?string
+    {
+        $composerFile = $packagePath . '/composer.json';
+
+        if (!file_exists($composerFile)) {
+            return null;
+        }
+
+        $composer = json_decode(file_get_contents($composerFile), true);
+
+        if (!isset($composer['autoload']['psr-4'])) {
+            return null;
+        }
+
+        // Prend le premier namespace PSR-4
+        foreach ($composer['autoload']['psr-4'] as $namespace => $path) {
+            return rtrim($namespace, '\\');
+        }
+
+        return null;
     }
 
     /**
@@ -111,20 +169,20 @@ class Console
     /**
      * Charge et parse le fichier de configuration JSON.
      *
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>
      */
-    private static function loadConfig(string $path): ?array
+    private static function loadConfig(string $path): array
     {
         $content = file_get_contents($path);
 
         if (false === $content) {
-            return null;
+            return [];
         }
 
         $config = json_decode($content, true);
 
         if (!is_array($config)) {
-            return null;
+            return [];
         }
 
         return $config;
