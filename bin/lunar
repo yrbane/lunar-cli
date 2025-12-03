@@ -3,25 +3,29 @@
 /**
  * Lunar CLI - Point d'entree autonome.
  *
- * Ce script peut etre utilise directement ou comme base
- * pour une application CLI personnalisee.
+ * Detecte automatiquement si un projet utilise config/console.json
+ * pour charger sa configuration, sinon utilise les commandes internes.
  *
  * @since 1.0.0
  * @author seb@nethttp.net
  */
 declare(strict_types=1);
 
-// Recherche de l'autoloader
+// Recherche de l'autoloader et detection du projet
 $autoloadPaths = [
+    __DIR__ . '/../../../autoload.php',            // Installation via Composer (vendor/yrbane/lunar-cli/bin)
     __DIR__ . '/../vendor/autoload.php',           // Developpement local
-    __DIR__ . '/../../../autoload.php',            // Installation via Composer
 ];
 
 $autoloaderFound = false;
+$projectRoot = null;
+
 foreach ($autoloadPaths as $autoloadPath) {
     if (file_exists($autoloadPath)) {
         require $autoloadPath;
         $autoloaderFound = true;
+        // Determine la racine du projet
+        $projectRoot = dirname($autoloadPath, 2);
         break;
     }
 }
@@ -32,13 +36,17 @@ if (!$autoloaderFound) {
     exit(1);
 }
 
+// Si config/console.json existe, utiliser Console::run()
+$configPath = $projectRoot . '/config/console.json';
+
+if (file_exists($configPath)) {
+    exit(\Lunar\Cli\Console::run($projectRoot));
+}
+
+// Sinon, utiliser les commandes internes de lunar-cli
 use Lunar\Cli\Application;
 
-// Creation de l'application
 $app = new Application('Lunar CLI', '1.0.0');
-
-// Enregistrement des commandes internes
 $app->registerCommandsFromDirectory(__DIR__ . '/../src/Command', 'Lunar\\Cli\\Command');
 
-// Execution
 exit($app->run());
