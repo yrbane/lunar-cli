@@ -118,6 +118,11 @@ class Application
         $instance = $this->createCommandInstance($className);
 
         if ($instance instanceof CommandInterface) {
+            // Injection de l'application si la commande le supporte
+            if (method_exists($instance, 'setApplication')) {
+                $instance->setApplication($this);
+            }
+
             $this->commands[$meta->name] = [
                 'instance' => $instance,
                 'description' => $meta->description,
