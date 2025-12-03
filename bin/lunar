@@ -21,11 +21,12 @@ $autoloaderFound = false;
 $projectRoot = null;
 
 foreach ($autoloadPaths as $autoloadPath) {
-    if (file_exists($autoloadPath)) {
-        require $autoloadPath;
+    $realPath = realpath($autoloadPath);
+    if (false !== $realPath) {
+        require $realPath;
         $autoloaderFound = true;
-        // Determine la racine du projet
-        $projectRoot = dirname($autoloadPath, 2);
+        // Determine la racine du projet (2 niveaux au-dessus de vendor/autoload.php)
+        $projectRoot = dirname($realPath, 2);
         break;
     }
 }
