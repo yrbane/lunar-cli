@@ -20,7 +20,7 @@ class Console
     /**
      * Chemin par defaut du fichier de configuration.
      */
-    private const CONFIG_PATH = 'config/console.json';
+    private const CONFIG_PATH = 'config/cli.json';
 
     /**
      * Lance la console en lisant la configuration.
