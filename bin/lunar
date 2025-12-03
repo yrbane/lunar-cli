@@ -11,22 +11,33 @@
  */
 declare(strict_types=1);
 
-// Recherche de l'autoloader et detection du projet
+// Detection de la racine du projet depuis le repertoire courant
+$projectRoot = getcwd();
+while ($projectRoot !== '/') {
+    if (file_exists($projectRoot . '/composer.json')) {
+        break;
+    }
+    $projectRoot = dirname($projectRoot);
+}
+
+if ($projectRoot === '/') {
+    $projectRoot = getcwd();
+}
+
+// Recherche de l'autoloader
 $autoloadPaths = [
+    $projectRoot . '/vendor/autoload.php',         // Autoloader du projet
     __DIR__ . '/../../../autoload.php',            // Installation via Composer (vendor/yrbane/lunar-cli/bin)
     __DIR__ . '/../vendor/autoload.php',           // Developpement local
 ];
 
 $autoloaderFound = false;
-$projectRoot = null;
 
 foreach ($autoloadPaths as $autoloadPath) {
     $realPath = realpath($autoloadPath);
     if (false !== $realPath) {
         require $realPath;
         $autoloaderFound = true;
-        // Determine la racine du projet (2 niveaux au-dessus de vendor/autoload.php)
-        $projectRoot = dirname($realPath, 2);
         break;
     }
 }
